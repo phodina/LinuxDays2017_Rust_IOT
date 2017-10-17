@@ -1,0 +1,384 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+                    <h1>Rust & IoT</h1>
+					<p>
+                        <small>Petr Hodina</small>
+					</p>
+				</section>
+				<section>
+                    <ul>
+                        <li>What is Rust?</li>
+                        <li>Rust for IoT</li>
+                        <li>Demo</li>
+                    </ul>
+				</section>
+				<section>
+                    <blockquote cite="https://www.rust-lang.org/en-US/">
+						&ldquo;Rust is a systems programming language that runs blazingly fast, prevents segfaults, and guarantees thread safety. &rdquo;
+					</blockquote>
+				</section>
+				<section>
+                    <h3>Features</h3>
+                    <ul>
+                        <li>zero-cost abstractions</li>
+                        <li>guaranteed memory safety</li>
+                        <li>threads without data races</li>
+                        <li>trait-based generics</li>
+                        <li>pattern matching</li>
+                        <li>minimal runtime</li>
+                        <li>efficient C bindings</li>
+                    </ul>
+				</section>
+				<section>
+                    <h3>Hello world</h3>
+                    <pre><code class="hljs" data-trim contenteditable>
+fn main() {
+    println!("Hello, world!");
+}
+					</code></pre>
+					<pre><code class="fragment hljs" data-trim contenteditable>
+$ rustc main.rs
+$ ./main
+Hello, world!
+					</code></pre>
+				</section>
+				<section>
+                    <h3>Cargo</h3>
+                    <ul>
+                        <li>Build system</li>
+                        <li>Package manager</li>
+                    </ul>
+                    <pre><code class="fragment hljs" data-trim contenteditable>
+$ cargo new hello_world --bin
+					</code></pre>
+					<pre><code class="fragment hljs" data-trim contenteditable>
+$ cd hello_world
+$ cargo run
+   Compiling hello_world v0.1.0 (file:///projects/hello_cargo)
+     Running `target/debug/hello_world`
+Hello, world!
+					</code></pre>
+				</section>
+				<section>
+				<h3>Control & safety</h3>
+				<img src="control1.png">
+				</section>
+				<section>
+				<h3>Control & safety</h3>
+				<img src="control2.png">
+				</section>
+				<section>
+                    <h3>Concepts</h3>
+                    <ul>
+                        <li>Ownership</li>
+                        <li>Borrowing</li>
+                        <li>Match</li>
+                        <li>Errors</li>
+                        <li>Unsafe</li>
+                    </ul>
+				</section>
+				<section>
+				<h3>Borrowing</h3>
+				<pre><code class="hljs" data-trim contenteditable>
+                let v = vec![1, 2, 3];
+                let v2 = v;
+                // ..
+                println!("First element: {}", v[0]);
+                </code></pre>
+				<div class="fragment">
+				<pre><code class="hljs" data-trim contenteditable>
+                let v2 = v;
+                -- value moved here
+                // ..
+                println!("First element: {}", v[0]);
+                                              ^ value used here after move
+                </code></pre>
+                <p>No error for copy type</p>
+                </div>
+				</section>
+				
+				<section>
+				<h3>References</h3>
+				<pre><code class="hljs" data-trim contenteditable>
+fn main() {
+    let s1 = String::from("hello");
+
+    let len = calculate_length(&s1);
+
+    println!("The length of '{}' is {}.", s1, len);
+}
+
+fn calculate_length(s: &String) -> usize {
+    s.len()
+}
+                </code></pre>
+                </section>
+
+				<section>
+				<h3>Mutable References</h3>
+				<pre><code class="hljs" data-trim contenteditable>
+fn main() {
+    let mut s = String::from("hello");
+
+    change(&s);
+}
+
+fn change(some_string: &String) {
+    some_string.push_str(", world");
+}
+                </code></pre>
+                <p>One mutable reference or unlimited read-olny references</p>
+                </section>
+                
+                <section>
+                <h3>Match pattern</h3>
+                <pre><code class="hljs" data-trim contenteditable>
+enum UsState {
+    Alabama,
+    Alaska,
+    // ... etc
+}
+
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState),
+}
+
+fn value_in_cents(coin: Coin) -> u32 {
+    match coin {
+        Coin::Penny => 1,
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter(state) => {
+            println!("State quarter from {:?}!", state);
+            25
+        },
+    }
+}
+                </code></pre>
+                </section>
+                
+                <section>
+                <h3>Errors</h3>
+                <pre><code class="hljs" data-trim contenteditable>
+use std::fs::File;
+
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+
+fn main() {
+    let f = File::open("hello.txt");
+
+    let f = match f {
+        Ok(file) => file,
+        Err(error) => {
+            panic!("There was a problem opening the file: {:?}", error)
+        },
+    };
+}
+</code></pre>
+                </section>
+                
+                
+                <section>  
+                <h3>Unsafe</h3>
+                <ul>
+                    <li>Dereferencing a raw pointer</li>
+                    <li>Calling an unsafe function or method</li>
+                    <li>Accessing or modifying a mutable static variable</li>
+                    <li>Implementing an unsafe trait</li>
+                </ul>
+                <pre><code class="hljs" data-trim contenteditable>
+let mut num = 5;
+
+let r1 = &num as *const i32;
+let r2 = &mut num as *mut i32;
+
+unsafe {
+    println!("r1 is: {}", *r1);
+    println!("r2 is: {}", *r2);
+}
+                </code></pre>
+                </section>
+                
+                <section>
+                <h3>Rust for IoT</h3>
+                <img src="f3.jpg">
+                </section>
+                
+                <section>
+                <h3>STM32F3 Discovery</h3>
+                <ul>
+                    <li>Microcontroller: STM32F303VCT6</li>
+                    <li>Core: ARM Cortex-M4 + FPU</li>
+                    <li>RAM: 40+8 KiB</li>
+                    <li>Flash: 256 KiB</li>
+                    <li>Peripherals: Timers, Serial, I2C, SPI, PWM, etc.</li>
+                </ul>
+                </section>
+                <section>
+                <h3>Tools</h3>
+                <ul>
+                    <li>A nightly Rust toolchain.</li>
+                    <li>Xargo, to build the core crate</li>
+                    <li>Linker: ld</li>
+                    <li>Debugger: gdb</li>
+                    <li>OpenOCD</li>
+                </section>
+                <section>
+                <h3>Useful crates</h3>
+                <ul>
+                    <li>cortex-m</li>
+                    <li>stm32f30x</li>
+                    <li>corrode</li>
+                    <li>rust-bindgen</li>
+                </ul>
+                </section>
+                
+                <section>
+                <h3>LED blinking</h3>
+<pre><code class="hljs" data-trim contenteditable>
+#![feature(used)]
+#![no_std]
+
+// version = "0.2.0", default-features = false
+extern crate cast;
+extern crate cortex_m;
+extern crate cortex_m_rt;
+extern crate stm32f30x;
+
+use core::u16;
+
+use cast::{u16, u32};
+use cortex_m::asm;
+use stm32f30x::{GPIOE, RCC, TIM7};
+
+mod frequency {
+    /// Frequency of APB1 bus (TIM7 is connected to this bus)
+    pub const APB1: u32 = 8_000_000;
+}
+
+/// Timer frequency
+const FREQUENCY: u32 = 1;
+
+#[inline(never)]
+fn main() {
+    // Critical section, this closure is non-preemptable
+    cortex_m::interrupt::free(
+        |cs| {
+            // INITIALIZATION PHASE
+            // Exclusive access to the peripherals
+            let gpioe = GPIOE.borrow(cs);
+            let rcc = RCC.borrow(cs);
+            let tim7 = TIM7.borrow(cs);
+
+            // Power up the relevant peripherals
+            rcc.ahbenr.modify(|_, w| w.iopeen().enabled());
+            rcc.apb1enr.modify(|_, w| w.tim7en().enabled());
+
+            // Configure the pin PE9 as an output pin
+            gpioe.moder.modify(|_, w| w.moder9().output());
+
+            // Configure TIM7 for periodic timeouts
+            let ratio = frequency::APB1 / FREQUENCY;
+            let psc = u16((ratio - 1) / u32(u16::MAX)).unwrap();
+            tim7.psc.write(|w| w.psc().bits(psc));
+            let arr = u16(ratio / u32(psc + 1)).unwrap();
+            tim7.arr.write(|w| w.arr().bits(arr));
+            tim7.cr1.write(|w| w.opm().continuous());
+
+            // Start the timer
+            tim7.cr1.modify(|_, w| w.cen().enabled());
+
+            // APPLICATION LOGIC
+            let mut state = false;
+            loop {
+                // Wait for an update event
+                while tim7.sr.read().uif().is_no_update() {}
+
+                // Clear the update event flag
+                tim7.sr.modify(|_, w| w.uif().clear());
+
+                // Toggle the state
+                state = !state;
+
+                // Blink the LED
+                if state {
+                    gpioe.bsrr.write(|w| w.bs9().set());
+                } else {
+                    gpioe.bsrr.write(|w| w.br9().reset());
+                }
+            }
+        },
+    );
+}
+
+// This part is the same as before
+#[allow(dead_code)]
+#[used]
+#[link_section = ".rodata.interrupts"]
+static INTERRUPTS: [extern "C" fn(); 240] = [default_handler; 240];
+
+extern "C" fn default_handler() {
+    asm::bkpt();
+}
+</code></pre>
+                </section>
+                <section>
+                <h3>Links</h3>
+                <ul>
+                    <li>rust-lang.org</li>
+                    <li>crates.io</li>
+                    <li>play.rust-lang.org</li>
+                </ul>
+                </section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
